@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="TemplateDomain" type="TemplateDomain" />
+	<xs:complexType name="TemplateDomain">
+		<xs:sequence>
+			<xs:element name="Description" type="xs:string" />
+			<xs:element name="Stream" type="Stream" maxOccurs="unbounded" />
+			<xs:element name="Template" type="Template" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="Template">
+		<xs:sequence>
+			<xs:element name="Description" type="xs:string" />
+			<xs:element name="TemplateQuery" type="xs:string" />
+			<xs:element name="ConditionParameters" type="ConditionParameters" />
+			<xs:element name="Parameters" type="Parameters" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="Stream">
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="streamName" type="xs:string" use="required" />
+		<xs:attribute name="streamVersion" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="ConditionParameters">
+		<xs:sequence>
+			<xs:element name="Parameter" type="Parameter" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="Parameters">
+		<xs:sequence>
+			<xs:element name="Parameter" type="Parameter" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Parameter">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string" use="required" />
+				<xs:attribute name="type" type="xs:string" use="required" />
+				<xs:attribute name="description" type="xs:string" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+</xs:schema>

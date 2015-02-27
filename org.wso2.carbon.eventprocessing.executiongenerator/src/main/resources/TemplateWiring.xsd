@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="TemplateConfig" type="TemplateConfig" />
+	<xs:complexType name="TemplateConfig">
+		<xs:sequence>
+			<xs:element name="Description" type="xs:string" />
+			<xs:element name="Templates" type="Templates" />
+			<xs:element name="TemplateWiring" type="TemplateWiring" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="from" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="Templates">
+		<xs:sequence>
+			<xs:element name="Template" type="Template" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TemplateWiring">
+		<xs:sequence>
+			<xs:element name="template" type="templateObject" />
+			<xs:element name="or" type="or" />
+			<xs:element name="and" type="and" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Template">
+		<xs:sequence>
+			<xs:element name="ConditionParameters" type="ConditionParameters" />
+			<xs:element name="Parameters" type="Parameters" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="type" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="Parameters">
+		<xs:sequence>
+			<xs:element name="DirectParameter" type="DirectParameter"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DirectParameter">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string" use="required" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="ConditionParameters">
+		<xs:sequence>
+			<xs:element name="Parameter" type="Parameter" />
+			<xs:element name="OR" type="OR" />
+			<xs:element name="AND" type="AND" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="Parameter">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="order" type="xs:string" use="required" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="OR">
+		<xs:sequence>
+			<xs:element name="OR" type="OR" maxOccurs="unbounded" />
+			<xs:element name="AND" type="AND" maxOccurs="unbounded" />
+			<xs:element name="Parameter" type="Parameter" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="order" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="AND">
+		<xs:sequence>
+			<xs:element name="OR" type="OR" maxOccurs="unbounded" />
+			<xs:element name="AND" type="AND" maxOccurs="unbounded" />
+			<xs:element name="Parameter" type="Parameter" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="order" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="and">
+		<xs:sequence>
+			<xs:element name="or" type="or" maxOccurs="unbounded" />
+			<xs:element name="and" type="and" maxOccurs="unbounded" />
+			<xs:element name="template" type="templateObject"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="type" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="or">
+		<xs:sequence>
+			<xs:element name="or" type="or" maxOccurs="unbounded" />
+			<xs:element name="and" type="and" maxOccurs="unbounded" />
+			<xs:element name="template" type="templateObject"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="type" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="templateObject">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="type" type="xs:string" use="required" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+</xs:schema>

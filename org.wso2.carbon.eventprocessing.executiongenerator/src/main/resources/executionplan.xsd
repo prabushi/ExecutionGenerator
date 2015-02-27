@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="executionPlan" type="executionPlan" />
+	<xs:complexType name="executionPlan">
+		<xs:sequence>
+			<xs:element name="description" type="xs:string" />
+			<xs:element name="siddhiConfiguration" type="siddhiConfiguration" />
+			<xs:element name="importedStreams" type="importedStreams" />
+			<xs:element name="queryExpressions" type="xs:string" />
+			<xs:element name="exportedStreams" type="exportedStreams" />
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="statistics" type="xs:string" use="required" />
+		<xs:attribute name="trace" type="xs:string" use="required" />
+	</xs:complexType>
+	<xs:complexType name="exportedStreams">
+		<xs:sequence>
+			<xs:element name="stream" type="stream" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="siddhiConfiguration">
+		<xs:sequence>
+			<xs:element name="property" type="property" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="importedStreams">
+		<xs:sequence>
+			<xs:element name="stream" type="stream" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="stream">
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="version" type="xs:string" use="required" />
+		<xs:attribute name="as" type="xs:string" />
+		<xs:attribute name="valueOf" type="xs:string" />
+	</xs:complexType>
+	<xs:complexType name="property">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string" use="required" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+</xs:schema>
