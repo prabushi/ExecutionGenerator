@@ -60,4 +60,22 @@ public class ReadTemplateStructures {
         return unmarshalledObject.getValue();
     }
 
+    /**
+     * return template query content when the template domain and name is given
+     *
+     * @param templateDomain template domain object
+     * @param templateName   template name
+     * @return template query
+     */
+    public String getTemplateQuery(TemplateDomain templateDomain,
+                                   String templateName) {
+        String query = "";
+        for (Template template : templateDomain.getTemplate()) {
+            if (template.getName().equals(templateName)) {
+                query = template.getTemplateQuery();
+                break;
+            }
+        }
+        return query;
+    }
 }

@@ -29,6 +29,48 @@ public class ExecutionGenerator {
         }
     }
 
+    /**
+     * save template configuration xml files in wso2 carbon registry
+     *
+     * @param fileName    template configuration name
+     * @param fileContent xml content
+     * @param description template configuration description
+     * @param type        template configuration type
+     */
+    public void saveTemplateConfig(String fileName, String fileContent, String description, String type) {
+        final Log log = LogFactory.getLog(ExecutionGeneratorAdminService.class);
+        try {
+            Resource resource = registry.newResource();
+            resource.setContent(fileContent);
+            resource.setProperty("name", fileName);
+            resource.setProperty("description", description);
+            resource.setProperty("type", type);
+            String resourcePath = ExecutionGeneratorConstants.TEMPLATE_CONFIG_PATH + "/" + fileName + ".xml";
+            registry.put(resourcePath, resource);
+        } catch (RegistryException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * get template configuration content when the configuration name is given
+     *
+     * @param configName template configuration name
+     * @return template configuration xml content as a string value
+     */
+    public String getTemplateConfig(String configName) {
+
+        Resource config_file;
+        String configContent = "";
+        try {
+            config_file = registry.get(ExecutionGeneratorConstants.TEMPLATE_CONFIG_PATH + "/" + configName + ".xml");
+            configContent = new String((byte[]) config_file.getContent());
+
+        } catch (org.wso2.carbon.registry.core.exceptions.RegistryException e) {
+
+        }
+        return configContent;
+    }
 
     /**
      * get all template configurations' details as a DomainConfigInfoDTO objects array

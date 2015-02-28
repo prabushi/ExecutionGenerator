@@ -762,9 +762,252 @@ public class Processing {
         return "stream" + ++counter;
     }
 
+    /**
+     * set  queries to each template and add it to wired template list
+     *
+     * @param templateConfig template configuration object
+     */
+    public void setWiredTemplates(TemplateConfig templateConfig) {
+        try {
+            wiredTemplatesList = new ArrayList<>();
+            Templates templates = templateConfig.getTemplates();
+            String templateDomain = templateConfig.getFrom();
+            ReadTemplateStructures readTemplateDomain = new ReadTemplateStructures();
+            TemplateDomain templateDomainObj = readTemplateDomain.getTemplateDomain(templateDomain);
 
+            for (Template template : templates.getTemplate()) {
 
+                String tempQuery = readTemplateDomain.getTemplateQuery(
+                        templateDomainObj, template.getType());
+                WiredTemplates wiredTemplateObj = new WiredTemplates();
+                wiredTemplateObj.setTemplate(template);
+                wiredTemplateObj.setTemplateQuery(tempQuery);
+                wiredTemplatesList.add(wiredTemplateObj);
 
+            }
+        } catch (JAXBException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * set condition of query of each wired template
+     */
+    public void setTemplateCondition() {
+
+        for (WiredTemplates wiredTemplates : wiredTemplatesList) {
+
+            conditionTree = new ConditionTree();
+            Template currentTemp = wiredTemplates.getTemplate();
+            processTemplateConditions(currentTemp);
+            ConditionNode root = conditionTree.getRoot();
+            conditionTree.traverse(root);
+            String templateQuery = wiredTemplates.getTemplateQuery();
+            templateQuery = templateQuery.replaceAll("\\$condition", conditionTree.getFinalString());
+            wiredTemplates.setTemplateQuery(templateQuery);
+
+            if (currentTemp.getParameters() != null) {
+
+                for (DirectParam aDirectParameterList : directParameterList) {
+
+                    String name = aDirectParameterList.getName();
+                    String value = aDirectParameterList.getValue();
+                    String oldQuery = wiredTemplates.getTemplateQuery();
+                    oldQuery = oldQuery.replaceAll("\\$" + name, value);
+                    wiredTemplates.setTemplateQuery(oldQuery);
+
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * process template conditions for a given template
+     *
+     * @param currentTemplate input template
+     */
+    public void processTemplateConditions(Template currentTemplate) {
+
+        ConditionParameters conditionParam = currentTemplate
+                .getConditionParameters();
+        Parameters parameters = currentTemplate.getParameters();
+        processConditionParameters(conditionParam);
+
+        if (parameters != null) {
+            processDirectParameters(parameters);
+        }
+
+    }
+
+    /**
+     * process condition parameters according to its and, or operations
+     *
+     * @param conditionParam condition parameter object
+     */
+    public void processConditionParameters(ConditionParameters conditionParam) {
+
+        AND andParam = conditionParam.getAND();
+        OR orParam = conditionParam.getOR();
+        Parameter param = conditionParam.getParameter();
+
+        if (param != null) {
+            processParameterCondition(param, null);
+        } else if (andParam != null) {
+            processANDCondition(andParam, null);
+        } else if (orParam != null) {
+            processORCondition(orParam, null);
+        }
+
+    }
+
+    /**
+     * process direct parameters within templates
+     *
+     * @param parameters parameters object
+     */
+    public void processDirectParameters(Parameters parameters) {
+
+        List<DirectParameter> directList = parameters.getDirectParameter();
+        directParameterList = new ArrayList<>();
+
+        for (DirectParameter directParameter : directList) {
+
+            DirectParam param = new DirectParam();
+            param.setName(directParameter.getName());
+            param.setValue(directParameter.getValue());
+            directParameterList.add(param);
+
+        }
+
+    }
+
+    /**
+     * process 'and' condition in template conditions
+     *
+     * @param andParam and operation
+     * @param parent   parent node
+     */
+    public void processANDCondition(AND andParam, ConditionNode parent) {
+
+        List<AND> andList = andParam.getAND();
+        List<OR> orList = andParam.getOR();
+        List<Parameter> parameterList = andParam.getParameter();
+        ConditionNode conditionNode = new ConditionNode();
+        conditionNode.setOrder(andParam.getOrder());
+        conditionNode.setParent(parent);
+        conditionNode.setLeft(null);
+        conditionNode.setRight(null);
+        conditionNode.setCondition("");
+        conditionNode.setType("AND");
+        conditionTree.insertNode(conditionNode);
+
+        if (!andList.isEmpty()) {
+
+            processANDCondition(andList.get(0), conditionNode);
+
+            if (andList.size() == 2) {
+                processANDCondition(andList.get(1), conditionNode);
+            }
+
+        }
+
+        if (!orList.isEmpty()) {
+
+            processORCondition(orList.get(0), conditionNode);
+
+            if (orList.size() == 2) {
+                processORCondition(orList.get(1), conditionNode);
+            }
+
+        }
+
+        if (!parameterList.isEmpty()) {
+
+            processParameterCondition(parameterList.get(0), conditionNode);
+
+            if (parameterList.size() == 2) {
+                processParameterCondition(parameterList.get(1), conditionNode);
+            }
+
+        }
+
+    }
+
+    /**
+     * process 'or' condition in template conditions
+     *
+     * @param orParam or operation
+     * @param parent  parent node
+     */
+    public void processORCondition(OR orParam, ConditionNode parent) {
+
+        List<AND> andList = orParam.getAND();
+        List<OR> orList = orParam.getOR();
+        List<Parameter> parameterList = orParam.getParameter();
+        ConditionNode conditionNode = new ConditionNode();
+        conditionNode.setOrder(orParam.getOrder());
+        conditionNode.setParent(parent);
+        conditionNode.setLeft(null);
+        conditionNode.setRight(null);
+        conditionNode.setCondition("");
+        conditionNode.setType("OR");
+        conditionTree.insertNode(conditionNode);
+
+        if (!andList.isEmpty()) {
+
+            processANDCondition(andList.get(0), conditionNode);
+
+            if (andList.size() == 2) {
+                processANDCondition(andList.get(1), conditionNode);
+            }
+
+        }
+
+        if (!orList.isEmpty()) {
+
+            processORCondition(orList.get(0), conditionNode);
+
+            if (orList.size() == 2) {
+                processORCondition(orList.get(1), conditionNode);
+            }
+
+        }
+
+        if (!parameterList.isEmpty()) {
+
+            processParameterCondition(parameterList.get(0), conditionNode);
+
+            if (parameterList.size() == 2) {
+                processParameterCondition(parameterList.get(1), conditionNode);
+            }
+
+        }
+
+    }
+
+    /**
+     * process condition values
+     *
+     * @param param parameter object
+     * @param node  node object
+     */
+    public void processParameterCondition(Parameter param, ConditionNode node) {
+
+        String currentCondition = param.getValue();
+        currentCondition = currentCondition.trim();
+        ConditionNode conditionNode = new ConditionNode();
+        conditionNode.setOrder(param.getOrder());
+        conditionNode.setParent(node);
+        conditionNode.setLeft(null);
+        conditionNode.setRight(null);
+        conditionNode.setType("PARAMETER");
+        conditionNode.setCondition(currentCondition);
+        conditionTree.insertNode(conditionNode);
+
+    }
 
     /**
      * generate and return execution plan xml content using JAXB
@@ -830,6 +1073,25 @@ public class Processing {
 
         return query;
 
+    }
+
+    /**
+     * get template query when the template name is given
+     *
+     * @param templateName template name
+     * @return relevant template query
+     */
+    public String getTemplateQuery(String templateName) {
+
+        String query = "";
+
+        for (WiredTemplates template : wiredTemplatesList) {
+
+            if (template.getTemplate().getName().equals(templateName)) {
+                query = template.getTemplateQuery();
+            }
+        }
+        return query;
     }
 
 }
