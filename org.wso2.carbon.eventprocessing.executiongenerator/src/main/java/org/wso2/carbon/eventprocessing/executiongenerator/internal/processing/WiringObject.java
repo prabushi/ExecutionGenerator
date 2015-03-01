@@ -5,9 +5,6 @@ package org.wso2.carbon.eventprocessing.executiongenerator.internal.processing;
  */
 public class WiringObject {
 
-    private boolean isOperation;
-    private String name;
-    private String query;
     private String inStream;
     private String outStreamLeft;
     private String outStreamRight;
@@ -19,15 +16,10 @@ public class WiringObject {
     /**
      * constructor
      *
-     * @param isOperation true if it is an operation, else false for a template
-     * @param name        template name
      * @param type        template type
      */
-    public WiringObject(boolean isOperation, String name, String type) {
+    public WiringObject(String type) {
         super();
-        this.isOperation = isOperation;
-        this.name = name;
-        this.query = "";
         this.inStream = "";
         this.outStreamLeft = "";
         this.outStreamRight = "";
@@ -151,57 +143,4 @@ public class WiringObject {
         this.outStreamRight = outStreamRight;
     }
 
-    /**
-     * get template query
-     *
-     * @return template query
-     */
-    public String getQuery() {
-        return query;
-    }
-
-    /**
-     * set template query
-     *
-     * @param query template query
-     */
-    public void setQuery(String query) {
-        this.query = query;
-    }
-
-    /**
-     * return whether the object is an operation or not
-     *
-     * @return true if it is an operation, else false
-     */
-    public boolean isOperation() {
-        return isOperation;
-    }
-
-    /**
-     * set whether the object is an operation or not
-     *
-     * @param isOperation object is an operation or not
-     */
-    public void setOperation(boolean isOperation) {
-        this.isOperation = isOperation;
-    }
-
-    /**
-     * get template name
-     *
-     * @return template name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * set template name
-     *
-     * @param name template name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
 }

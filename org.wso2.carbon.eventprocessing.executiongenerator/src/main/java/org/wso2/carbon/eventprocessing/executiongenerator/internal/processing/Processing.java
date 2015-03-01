@@ -40,7 +40,7 @@ public class Processing {
      *
      * @return composite query after template wiring
      */
-    public String getCompositeQuery() {
+    private String getCompositeQuery() {
         return compositeQuery;
     }
 
@@ -49,7 +49,7 @@ public class Processing {
      *
      * @param compositeQuery composite query after template wiring
      */
-    public void setCompositeQuery(String compositeQuery) {
+    private void setCompositeQuery(String compositeQuery) {
         this.compositeQuery = compositeQuery;
     }
 
@@ -88,7 +88,7 @@ public class Processing {
      * @param templateConfig template configuration object
      * @param fileContent    template configuration content
      */
-    public void setAttributes(ExecutionPlan executionPlan,
+    private void setAttributes(ExecutionPlan executionPlan,
                               TemplateConfig templateConfig, String fileContent) {
         ExecutionGenerator executionGenerator = new ExecutionGenerator();
         String fileName = templateConfig.getName();
@@ -106,7 +106,7 @@ public class Processing {
      * @param executionPlan  execution plan object
      * @param templateConfig template configuration object
      */
-    public void setDescription(ExecutionPlan executionPlan,
+    private void setDescription(ExecutionPlan executionPlan,
                                TemplateConfig templateConfig) {
         executionPlan.setDescription(templateConfig.getDescription());
     }
@@ -117,7 +117,7 @@ public class Processing {
      * @param executionPlan execution plan object
      * @param factory       execution plan object factory object
      */
-    public void setSiddhiConfiguration(ExecutionPlan executionPlan,
+    private void setSiddhiConfiguration(ExecutionPlan executionPlan,
                                        ObjectFactory factory) {
 
         List<Property> propertyList = new ArrayList<>();
@@ -146,7 +146,7 @@ public class Processing {
      * @param factory        execution plan object factory object
      * @param templateConfig template configuration object
      */
-    public void setStreams(ExecutionPlan executionPlan,
+    private void setStreams(ExecutionPlan executionPlan,
                            ObjectFactory factory, TemplateConfig templateConfig) {
         try {
             ReadTemplateStructures readTemplateDomain = new ReadTemplateStructures();
@@ -195,7 +195,7 @@ public class Processing {
      *
      * @return input stream name
      */
-    public String getInputStream() {
+    private String getInputStream() {
         return inputStream;
     }
 
@@ -204,7 +204,7 @@ public class Processing {
      *
      * @param inputStream input stream name
      */
-    public void setInputStream(String inputStream) {
+    private void setInputStream(String inputStream) {
         this.inputStream = inputStream;
     }
 
@@ -213,7 +213,7 @@ public class Processing {
      *
      * @return output stream name
      */
-    public String getOutputStream() {
+    private String getOutputStream() {
         return outputStream;
     }
 
@@ -222,7 +222,7 @@ public class Processing {
      *
      * @param outputStream output stream name
      */
-    public void setOutputStream(String outputStream) {
+    private void setOutputStream(String outputStream) {
         this.outputStream = outputStream;
     }
 
@@ -232,7 +232,7 @@ public class Processing {
      * @param executionPlan  execution plan object
      * @param templateConfig template configuration object
      */
-    public void setQueryExpressions(ExecutionPlan executionPlan,
+    private void setQueryExpressions(ExecutionPlan executionPlan,
                                     TemplateConfig templateConfig) {
         this.setWiredTemplates(templateConfig);
         this.setTemplateCondition();
@@ -245,7 +245,7 @@ public class Processing {
      *
      * @param wiringObject wiring object
      */
-    public void treeTraversal(WiringObject wiringObject) {
+    private void treeTraversal(WiringObject wiringObject) {
 
         if (wiringObject != null) {
 
@@ -253,18 +253,18 @@ public class Processing {
                 wiringObject.setInStream(this.getTempStream());
             }
 
-            if (!wiringObject.isOperation()) {
+            if (wiringObject instanceof TemplateWiringObject) {
 
                 if (wiringObject.getParent() != null) {
 
-                    if (wiringObject.getParent().getName().equals("AND") && wiringObject.getType().equals("left")) {
+                    if (wiringObject.getParent() instanceof AndWiringObject && wiringObject.getType().equals("left")) {
 
                         String stream = this.generateRandomStream();
                         wiringObject.setOutStreamLeft(stream);
                         wiringObject.setOutStreamRight(stream);
                         wiringObject.getParent().getRight().setInStream(stream);
 
-                    } else if (wiringObject.getParent().getName().equals("AND")
+                    } else if (wiringObject.getParent() instanceof AndWiringObject
                             && wiringObject.getType().equals("right")) {
 
                         if (!havingANDParent(wiringObject.getParent()) || isARightChild(wiringObject)) {
@@ -283,7 +283,7 @@ public class Processing {
 
                         }
 
-                    } else if (wiringObject.getParent().getName().equals("OR")
+                    } else if (wiringObject.getParent() instanceof OrWiringObject
                             && wiringObject.getType().equals("left")) {
 
                         if (!havingANDParent(wiringObject.getParent()) || isARightChild(wiringObject)) {
@@ -300,7 +300,7 @@ public class Processing {
                             wiringObject.setOutStreamRight(stream2);
                             this.setTempStream(stream2);
 
-                            if (!wiringObject.getParent().getRight().isOperation()) {
+                            if (wiringObject.getParent().getRight() instanceof TemplateWiringObject) {
 
                                 wiringObject.getParent().getRight().setOutStreamLeft(stream2);
                                 wiringObject.getParent().getRight().setOutStreamRight(stream2);
@@ -309,7 +309,7 @@ public class Processing {
 
                         }
 
-                    } else if (wiringObject.getParent().getName().equals("OR")
+                    } else if (wiringObject.getParent() instanceof OrWiringObject
                             && wiringObject.getType().equals("right")
                             && wiringObject.getOutStreamLeft().equals("")) {
 
@@ -337,11 +337,11 @@ public class Processing {
 
             } else {
 
-                if (wiringObject.getName().equals("AND")) {
+                if (wiringObject instanceof AndWiringObject) {
 
                     if (wiringObject.getParent() != null) {
 
-                        if (wiringObject.getInStream().equals("") && wiringObject.getParent().getName().equals("AND")) {
+                        if (wiringObject.getInStream().equals("") && wiringObject.getParent() instanceof AndWiringObject) {
 
                             wiringObject.setInStream(this.getTempStream());
 
@@ -353,11 +353,11 @@ public class Processing {
                     wiringObject.setOutStreamLeft(stream);
                     wiringObject.getLeft().setInStream(stream);
 
-                } else if (wiringObject.getName().equals("OR")) {
+                } else if (wiringObject instanceof OrWiringObject) {
 
                     if (wiringObject.getParent() != null) {
 
-                        if (wiringObject.getInStream().equals("") && wiringObject.getParent().getName().equals("AND")) {
+                        if (wiringObject.getInStream().equals("") && wiringObject.getParent() instanceof AndWiringObject) {
 
                             wiringObject.setInStream(this.getTempStream());
 
@@ -388,13 +388,13 @@ public class Processing {
      * @param wiringObject wiring object
      * @return highest and parent
      */
-    public WiringObject getHighestAndOperation(WiringObject wiringObject) {
+    private WiringObject getHighestAndOperation(WiringObject wiringObject) {
 
         WiringObject and = null;
 
         while (wiringObject.getParent() != null) {
 
-            if (wiringObject.getParent().getName().equals("AND")) {
+            if (wiringObject.getParent() instanceof AndWiringObject) {
                 and = wiringObject.getParent();
             }
 
@@ -412,7 +412,7 @@ public class Processing {
      * @param isInTree         true if the wiring object is in the tree, else false
      * @return whether the wiring object is in the tree
      */
-    public boolean isInTree(WiringObject wiringObject,
+    private boolean isInTree(WiringObject wiringObject,
                             WiringObject wiringObjectTemp, boolean isInTree) {
 
         boolean isInTreeTemp = isInTree;
@@ -444,7 +444,7 @@ public class Processing {
      * @param wiringObject wiring object
      * @return true if the wiring object is in the right sub tree, else false
      */
-    public boolean isARightChild(WiringObject wiringObject) {
+    private boolean isARightChild(WiringObject wiringObject) {
 
         boolean isInRightSubTree = false;
         WiringObject highestAnd = this.getHighestAndOperation(wiringObject.getParent());
@@ -468,8 +468,8 @@ public class Processing {
      * @param wiringObject wiring object
      * @return true if having an and parent, else false
      */
-    public boolean havingANDParent(WiringObject wiringObject) {
-        return wiringObject.getParent() != null && (wiringObject.getParent().getName().equals("AND") || havingANDParent(wiringObject.getParent()));
+    private boolean havingANDParent(WiringObject wiringObject) {
+        return wiringObject.getParent() != null && (wiringObject.getParent() instanceof AndWiringObject || havingANDParent(wiringObject.getParent()));
     }
 
     /**
@@ -477,7 +477,7 @@ public class Processing {
      *
      * @param templateConfig template configuration object
      */
-    public void createCompositeQuery(TemplateConfig templateConfig) {
+    private void createCompositeQuery(TemplateConfig templateConfig) {
 
         TemplateWiring templateWiring = templateConfig.getTemplateWiring();
         WiringObject wiringObject = null;
@@ -486,16 +486,16 @@ public class Processing {
         TemplateObject template = templateWiring.getTemplate();
 
         if (template != null) {
-            wiringObject = new WiringObject(false, template.getValue(),
+            wiringObject = new TemplateWiringObject(template.getValue(),
                     template.getType());
 
         } else if (and != null) {
-            wiringObject = new WiringObject(true, "AND", and.getType());
+            wiringObject = new AndWiringObject(and.getType());
             wiringObject.setParent(null);
             this.setAndWiringObject(and, wiringObject);
 
         } else if (or != null) {
-            wiringObject = new WiringObject(true, "OR", or.getType());
+            wiringObject = new OrWiringObject(or.getType());
             wiringObject.setParent(null);
             this.setOrWiringObject(or, wiringObject);
         }
@@ -512,7 +512,7 @@ public class Processing {
      *
      * @return temporary stream name
      */
-    public String getTempStream() {
+    private String getTempStream() {
         return tempStream;
     }
 
@@ -521,7 +521,7 @@ public class Processing {
      *
      * @param tempStream temporary stream name
      */
-    public void setTempStream(String tempStream) {
+    private void setTempStream(String tempStream) {
         this.tempStream = tempStream;
     }
 
@@ -530,15 +530,14 @@ public class Processing {
      *
      * @param wiringObject wiring object
      */
-    public void preOrderQueryProcessing(WiringObject wiringObject) {
+    private void preOrderQueryProcessing(WiringObject wiringObject) {
 
         if (wiringObject != null) {
 
-            if (!wiringObject.isOperation()) {
+            if (wiringObject instanceof TemplateWiringObject) {
 
-                wiringObject.setQuery(this.getTemplateQuery(wiringObject
-                        .getName()));
-                String query = this.setInputStream(wiringObject.getQuery(),
+                ((TemplateWiringObject) wiringObject).setQuery(this.getTemplateQuery(((TemplateWiringObject) wiringObject).getName()));
+                String query = this.setInputStream(((TemplateWiringObject) wiringObject).getQuery(),
                         wiringObject.getInStream());
                 query = this.setOutputStream(query,
                         wiringObject.getOutStreamLeft());
@@ -558,7 +557,7 @@ public class Processing {
      *
      * @return root object
      */
-    public WiringObject getRoot() {
+    private WiringObject getRoot() {
         return root;
     }
 
@@ -567,7 +566,7 @@ public class Processing {
      *
      * @param root root object
      */
-    public void setRoot(WiringObject root) {
+    private void setRoot(WiringObject root) {
         this.root = root;
     }
 
@@ -577,7 +576,7 @@ public class Processing {
      * @param and          and object
      * @param wiringObject parent wiring object
      */
-    public void setAndWiringObject(And and, WiringObject wiringObject) {
+    private void setAndWiringObject(And and, WiringObject wiringObject) {
 
         List<And> andList = and.getAnd();
         List<Or> orList = and.getOr();
@@ -588,7 +587,7 @@ public class Processing {
             for (TemplateObject template : templateList) {
 
                 String type = template.getType();
-                WiringObject tempWiringObject = new WiringObject(false,
+                WiringObject tempWiringObject = new TemplateWiringObject(
                         template.getValue(), type);
                 tempWiringObject.setParent(wiringObject);
 
@@ -611,7 +610,7 @@ public class Processing {
             for (Or orObject : orList) {
 
                 String type = orObject.getType();
-                WiringObject tempWiringObject = new WiringObject(true, "OR",
+                WiringObject tempWiringObject = new OrWiringObject(
                         type);
                 tempWiringObject.setParent(wiringObject);
 
@@ -636,7 +635,7 @@ public class Processing {
             for (And andObject : andList) {
 
                 String type = andObject.getType();
-                WiringObject tempWiringObject = new WiringObject(true, "AND",
+                WiringObject tempWiringObject = new AndWiringObject(
                         type);
                 tempWiringObject.setParent(wiringObject);
 
@@ -664,7 +663,7 @@ public class Processing {
      * @param or           or object
      * @param wiringObject parent wiring object
      */
-    public void setOrWiringObject(Or or, WiringObject wiringObject) {
+    private void setOrWiringObject(Or or, WiringObject wiringObject) {
 
         List<And> andList = or.getAnd();
         List<Or> orList = or.getOr();
@@ -675,7 +674,7 @@ public class Processing {
             for (TemplateObject template : templateList) {
 
                 String type = template.getType();
-                WiringObject tempWiringObject = new WiringObject(false,
+                WiringObject tempWiringObject = new TemplateWiringObject(
                         template.getValue(), type);
                 tempWiringObject.setParent(wiringObject);
 
@@ -698,7 +697,7 @@ public class Processing {
             for (Or orObject : orList) {
 
                 String type = orObject.getType();
-                WiringObject tempWiringObject = new WiringObject(true, "OR",
+                WiringObject tempWiringObject = new OrWiringObject(
                         type);
                 tempWiringObject.setParent(wiringObject);
 
@@ -723,8 +722,7 @@ public class Processing {
             for (And andObject : andList) {
 
                 String type = andObject.getType();
-                WiringObject tempWiringObject = new WiringObject(true, "AND",
-                        type);
+                WiringObject tempWiringObject = new AndWiringObject(type);
                 tempWiringObject.setParent(wiringObject);
 
                 if (type.equals("left")) {
@@ -749,7 +747,7 @@ public class Processing {
      *
      * @param query query to append to the composite query
      */
-    public void appendCompositeQuery(String query) {
+    private void appendCompositeQuery(String query) {
         this.compositeQuery += query;
     }
 
@@ -758,7 +756,7 @@ public class Processing {
      *
      * @return random stream name
      */
-    public String generateRandomStream() {
+    private String generateRandomStream() {
         return "stream" + ++counter;
     }
 
@@ -767,7 +765,7 @@ public class Processing {
      *
      * @param templateConfig template configuration object
      */
-    public void setWiredTemplates(TemplateConfig templateConfig) {
+    private void setWiredTemplates(TemplateConfig templateConfig) {
         try {
             wiredTemplatesList = new ArrayList<>();
             Templates templates = templateConfig.getTemplates();
@@ -793,7 +791,7 @@ public class Processing {
     /**
      * set condition of query of each wired template
      */
-    public void setTemplateCondition() {
+    private void setTemplateCondition() {
 
         for (WiredTemplates wiredTemplates : wiredTemplatesList) {
 
@@ -829,7 +827,7 @@ public class Processing {
      *
      * @param currentTemplate input template
      */
-    public void processTemplateConditions(Template currentTemplate) {
+    private void processTemplateConditions(Template currentTemplate) {
 
         ConditionParameters conditionParam = currentTemplate
                 .getConditionParameters();
@@ -847,7 +845,7 @@ public class Processing {
      *
      * @param conditionParam condition parameter object
      */
-    public void processConditionParameters(ConditionParameters conditionParam) {
+    private void processConditionParameters(ConditionParameters conditionParam) {
 
         AND andParam = conditionParam.getAND();
         OR orParam = conditionParam.getOR();
@@ -868,7 +866,7 @@ public class Processing {
      *
      * @param parameters parameters object
      */
-    public void processDirectParameters(Parameters parameters) {
+    private void processDirectParameters(Parameters parameters) {
 
         List<DirectParameter> directList = parameters.getDirectParameter();
         directParameterList = new ArrayList<>();
@@ -890,7 +888,7 @@ public class Processing {
      * @param andParam and operation
      * @param parent   parent node
      */
-    public void processANDCondition(AND andParam, ConditionNode parent) {
+    private void processANDCondition(AND andParam, ConditionNode parent) {
 
         List<AND> andList = andParam.getAND();
         List<OR> orList = andParam.getOR();
@@ -901,7 +899,7 @@ public class Processing {
         conditionNode.setLeft(null);
         conditionNode.setRight(null);
         conditionNode.setCondition("");
-        conditionNode.setType("AND");
+        conditionNode.setType(ConditionNode.Type.AND);
         conditionTree.insertNode(conditionNode);
 
         if (!andList.isEmpty()) {
@@ -942,7 +940,7 @@ public class Processing {
      * @param orParam or operation
      * @param parent  parent node
      */
-    public void processORCondition(OR orParam, ConditionNode parent) {
+    private void processORCondition(OR orParam, ConditionNode parent) {
 
         List<AND> andList = orParam.getAND();
         List<OR> orList = orParam.getOR();
@@ -953,7 +951,7 @@ public class Processing {
         conditionNode.setLeft(null);
         conditionNode.setRight(null);
         conditionNode.setCondition("");
-        conditionNode.setType("OR");
+        conditionNode.setType(ConditionNode.Type.OR);
         conditionTree.insertNode(conditionNode);
 
         if (!andList.isEmpty()) {
@@ -994,7 +992,7 @@ public class Processing {
      * @param param parameter object
      * @param node  node object
      */
-    public void processParameterCondition(Parameter param, ConditionNode node) {
+    private void processParameterCondition(Parameter param, ConditionNode node) {
 
         String currentCondition = param.getValue();
         currentCondition = currentCondition.trim();
@@ -1003,7 +1001,7 @@ public class Processing {
         conditionNode.setParent(node);
         conditionNode.setLeft(null);
         conditionNode.setRight(null);
-        conditionNode.setType("PARAMETER");
+        conditionNode.setType(ConditionNode.Type.PARAMETER);
         conditionNode.setCondition(currentCondition);
         conditionTree.insertNode(conditionNode);
 
@@ -1016,7 +1014,7 @@ public class Processing {
      * @param factory       execution plan factory object
      * @return xml content of the execution plan as a string
      */
-    public String getExecutionPlanContent(ExecutionPlan executionPlan,
+    private String getExecutionPlanContent(ExecutionPlan executionPlan,
                                           ObjectFactory factory) {
 
         String executionPlanContent = "";
@@ -1055,7 +1053,7 @@ public class Processing {
      * @param inStream input stream name
      * @return updated query
      */
-    public String setInputStream(String query, String inStream) {
+    private String setInputStream(String query, String inStream) {
         query = query.replaceAll("\\$inStream", inStream);
         return query;
     }
@@ -1067,7 +1065,7 @@ public class Processing {
      * @param outStream output stream name
      * @return updated query
      */
-    public String setOutputStream(String query, String outStream) {
+    private String setOutputStream(String query, String outStream) {
 
         query = query.replaceAll("\\$outStream", outStream);
 
@@ -1081,7 +1079,7 @@ public class Processing {
      * @param templateName template name
      * @return relevant template query
      */
-    public String getTemplateQuery(String templateName) {
+    private String getTemplateQuery(String templateName) {
 
         String query = "";
 
