@@ -3,11 +3,11 @@ package org.wso2.carbon.eventprocessing.executiongenerator.internal.processing;
 import com.sun.xml.bind.marshaller.DataWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.eventprocessing.executiongenerator.ExecutionGenerator;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.executionplan.*;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.executionplan.ObjectFactory;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.temperatureanalysis.TemplateDomain;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.templateconfiguration.*;
+import org.wso2.carbon.eventprocessing.executiongenerator.internal.util.ExecutionGeneratorConstants;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -22,7 +22,7 @@ import java.util.List;
    Generate the execution plan's content
  */
 
-public class Processing {
+public class GenerateExecutionPlan {
 
     private String inputStream;
     private String outputStream;
@@ -33,7 +33,12 @@ public class Processing {
     private ConditionTree conditionTree;
     private static List<DirectParam> directParameterList;
     private int counter = 0;
-    private static final Log log = LogFactory.getLog(Processing.class);
+    private static final Log log = LogFactory.getLog(GenerateExecutionPlan.class);
+    public static GenerateExecutionPlan instance =null;
+
+    private GenerateExecutionPlan(){
+
+    }
 
     /**
      * give the composite query
@@ -54,22 +59,22 @@ public class Processing {
     }
 
     /**
-     * initialize processing of the template configurations and give the final content of the execution plan
+     * initialize GENERATE_EXECUTION_PLAN of the template configurations and give the final content of the execution plan
      *
      * @param fileContent template configuration content
      * @return final content of the execution plan
      */
-    public String getExecutionPlan(String fileContent) {
-        TemplateConfig templateConfig = null;
+    public String getExecutionPlan(String fileContent) throws Exception {
+        TemplateConfig templateConfig;
         ObjectFactory objectFactory = new ObjectFactory();
         ExecutionPlan executionPlan = objectFactory.createExecutionPlan();
 
         this.setCompositeQuery("");
         try {
-            ReadTemplateStructures readTemplateConfiguration = new ReadTemplateStructures();
+            ReadTemplateStructures readTemplateConfiguration = ExecutionGeneratorConstants.readTemplateStructures;
             templateConfig = readTemplateConfiguration.getTemplateConfig(fileContent);
         } catch (JAXBException e) {
-            log.error(e.getMessage(), e);
+            throw new Exception("JAXBException at: "+e+" "+fileContent);
         }
         this.setAttributes(executionPlan, templateConfig, fileContent);
         this.setDescription(executionPlan, templateConfig);
@@ -90,10 +95,10 @@ public class Processing {
      */
     private void setAttributes(ExecutionPlan executionPlan,
                               TemplateConfig templateConfig, String fileContent) {
-        ExecutionGenerator executionGenerator = new ExecutionGenerator();
+        ConfigInformationCollector configInformationCollector = ExecutionGeneratorConstants.configInformationCollector;
         String fileName = templateConfig.getName();
 
-        executionGenerator.saveTemplateConfig(fileName, fileContent, templateConfig.getDescription(), templateConfig.getFrom());
+        configInformationCollector.saveTemplateConfig(fileName, fileContent, templateConfig.getDescription(), templateConfig.getFrom());
         executionPlan.setName(fileName);
         executionPlan.setStatistics("disable");
         executionPlan.setTrace("disable");
@@ -123,7 +128,7 @@ public class Processing {
         List<Property> propertyList = new ArrayList<>();
 
         Property property1 = factory.createProperty();
-        property1.setName("siddhi.enable.distributed.processing");
+        property1.setName("siddhi.enable.distributed.GENERATE_EXECUTION_PLAN");
         property1.setValue("false");
 
         Property property2 = factory.createProperty();
@@ -147,9 +152,9 @@ public class Processing {
      * @param templateConfig template configuration object
      */
     private void setStreams(ExecutionPlan executionPlan,
-                           ObjectFactory factory, TemplateConfig templateConfig) {
+                           ObjectFactory factory, TemplateConfig templateConfig) throws Exception {
         try {
-            ReadTemplateStructures readTemplateDomain = new ReadTemplateStructures();
+            ReadTemplateStructures readTemplateDomain = ExecutionGeneratorConstants.readTemplateStructures;
             TemplateDomain templateDomain = readTemplateDomain.getTemplateDomain(templateConfig.getFrom());
             List<org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.temperatureanalysis.Stream> streamList = templateDomain.getStream();
 
@@ -186,7 +191,7 @@ public class Processing {
                 }
             }
         } catch (JAXBException e) {
-            log.error(e.getMessage(), e);
+            throw new Exception("JAXBException at setting streams for execution plan: "+e);
         }
     }
 
@@ -233,7 +238,7 @@ public class Processing {
      * @param templateConfig template configuration object
      */
     private void setQueryExpressions(ExecutionPlan executionPlan,
-                                    TemplateConfig templateConfig) {
+                                    TemplateConfig templateConfig) throws Exception {
         this.setWiredTemplates(templateConfig);
         this.setTemplateCondition();
         this.createCompositeQuery(templateConfig);
@@ -257,7 +262,7 @@ public class Processing {
 
                 if (wiringObject.getParent() != null) {
 
-                    if (wiringObject.getParent() instanceof AndWiringObject && wiringObject.getType().equals("left")) {
+                    if (wiringObject.getParent() instanceof AndWiringObject && wiringObject.getType().equals(WiringObject.Type.left)) {
 
                         String stream = this.generateRandomStream();
                         wiringObject.setOutStreamLeft(stream);
@@ -265,7 +270,7 @@ public class Processing {
                         wiringObject.getParent().getRight().setInStream(stream);
 
                     } else if (wiringObject.getParent() instanceof AndWiringObject
-                            && wiringObject.getType().equals("right")) {
+                            && wiringObject.getType().equals(WiringObject.Type.right)) {
 
                         if (!havingANDParent(wiringObject.getParent()) || isARightChild(wiringObject)) {
 
@@ -284,7 +289,7 @@ public class Processing {
                         }
 
                     } else if (wiringObject.getParent() instanceof OrWiringObject
-                            && wiringObject.getType().equals("left")) {
+                            && wiringObject.getType().equals(WiringObject.Type.left)) {
 
                         if (!havingANDParent(wiringObject.getParent()) || isARightChild(wiringObject)) {
 
@@ -310,7 +315,7 @@ public class Processing {
                         }
 
                     } else if (wiringObject.getParent() instanceof OrWiringObject
-                            && wiringObject.getType().equals("right")
+                            && wiringObject.getType().equals(WiringObject.Type.right)
                             && wiringObject.getOutStreamLeft().equals("")) {
 
                         if (!havingANDParent(wiringObject.getParent()) || isARightChild(wiringObject)) {
@@ -591,11 +596,11 @@ public class Processing {
                         template.getValue(), type);
                 tempWiringObject.setParent(wiringObject);
 
-                if (type.equals("left")) {
+                if (type.equals(WiringObject.Type.left.name())) {
 
                     wiringObject.setLeft(tempWiringObject);
 
-                } else if (type.equals("right")) {
+                } else if (type.equals(WiringObject.Type.right.name())) {
 
                     wiringObject.setRight(tempWiringObject);
 
@@ -614,11 +619,11 @@ public class Processing {
                         type);
                 tempWiringObject.setParent(wiringObject);
 
-                if (type.equals("left")) {
+                if (type.equals(WiringObject.Type.left.name())) {
 
                     wiringObject.setLeft(tempWiringObject);
 
-                } else if (type.equals("right")) {
+                } else if (type.equals(WiringObject.Type.right.name())) {
 
                     wiringObject.setRight(tempWiringObject);
 
@@ -639,11 +644,11 @@ public class Processing {
                         type);
                 tempWiringObject.setParent(wiringObject);
 
-                if (type.equals("left")) {
+                if (type.equals(WiringObject.Type.left.name())) {
 
                     wiringObject.setLeft(tempWiringObject);
 
-                } else if (type.equals("right")) {
+                } else if (type.equals(WiringObject.Type.right.name())) {
 
                     wiringObject.setRight(tempWiringObject);
 
@@ -678,11 +683,11 @@ public class Processing {
                         template.getValue(), type);
                 tempWiringObject.setParent(wiringObject);
 
-                if (type.equals("left")) {
+                if (type.equals(WiringObject.Type.left.name())) {
 
                     wiringObject.setLeft(tempWiringObject);
 
-                } else if (type.equals("right")) {
+                } else if (type.equals(WiringObject.Type.right.name())) {
 
                     wiringObject.setRight(tempWiringObject);
 
@@ -701,11 +706,11 @@ public class Processing {
                         type);
                 tempWiringObject.setParent(wiringObject);
 
-                if (type.equals("left")) {
+                if (type.equals(WiringObject.Type.left.name())) {
 
                     wiringObject.setLeft(tempWiringObject);
 
-                } else if (type.equals("right")) {
+                } else if (type.equals(WiringObject.Type.right.name())) {
 
                     wiringObject.setRight(tempWiringObject);
 
@@ -725,11 +730,11 @@ public class Processing {
                 WiringObject tempWiringObject = new AndWiringObject(type);
                 tempWiringObject.setParent(wiringObject);
 
-                if (type.equals("left")) {
+                if (type.equals(WiringObject.Type.left.name())) {
 
                     wiringObject.setLeft(tempWiringObject);
 
-                } else if (type.equals("right")) {
+                } else if (type.equals(WiringObject.Type.right.name())) {
 
                     wiringObject.setRight(tempWiringObject);
 
@@ -765,12 +770,12 @@ public class Processing {
      *
      * @param templateConfig template configuration object
      */
-    private void setWiredTemplates(TemplateConfig templateConfig) {
+    private void setWiredTemplates(TemplateConfig templateConfig) throws Exception {
         try {
             wiredTemplatesList = new ArrayList<>();
             Templates templates = templateConfig.getTemplates();
             String templateDomain = templateConfig.getFrom();
-            ReadTemplateStructures readTemplateDomain = new ReadTemplateStructures();
+            ReadTemplateStructures readTemplateDomain = ExecutionGeneratorConstants.readTemplateStructures;
             TemplateDomain templateDomainObj = readTemplateDomain.getTemplateDomain(templateDomain);
 
             for (Template template : templates.getTemplate()) {
@@ -784,7 +789,7 @@ public class Processing {
 
             }
         } catch (JAXBException e) {
-            log.error(e.getMessage(), e);
+            throw new Exception("JAXBException at setting Wired Templates.: "+e);
         }
     }
 
@@ -798,8 +803,6 @@ public class Processing {
             conditionTree = new ConditionTree();
             Template currentTemp = wiredTemplates.getTemplate();
             processTemplateConditions(currentTemp);
-            ConditionNode root = conditionTree.getRoot();
-            conditionTree.traverse(root);
             String templateQuery = wiredTemplates.getTemplateQuery();
             templateQuery = templateQuery.replaceAll("\\$condition", conditionTree.getFinalString());
             wiredTemplates.setTemplateQuery(templateQuery);
@@ -1015,7 +1018,7 @@ public class Processing {
      * @return xml content of the execution plan as a string
      */
     private String getExecutionPlanContent(ExecutionPlan executionPlan,
-                                          ObjectFactory factory) {
+                                          ObjectFactory factory) throws Exception {
 
         String executionPlanContent = "";
         try {
@@ -1039,7 +1042,7 @@ public class Processing {
 
 
         } catch (JAXBException e) {
-            log.error(e.getMessage(), e);
+            throw new Exception("JAXBException at getting Execution Plan: "+e);
         }
 
         return executionPlanContent;
@@ -1092,4 +1095,10 @@ public class Processing {
         return query;
     }
 
+    public static GenerateExecutionPlan getInstance(){
+        if(instance == null){
+            instance=new GenerateExecutionPlan();
+        }
+        return instance;
+    }
 }

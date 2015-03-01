@@ -10,6 +10,7 @@ public class AndWiringObject extends WiringObject{
      * @param type        template type
      */
     public AndWiringObject(String type) {
-        super( type);
+
+        super(WiringObject.Type.valueOf(type));
     }
 }

@@ -1,9 +1,11 @@
-package org.wso2.carbon.eventprocessing.executiongenerator;
+package org.wso2.carbon.eventprocessing.executiongenerator.internal.processing;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.RegistryType;
+import org.wso2.carbon.eventprocessing.executiongenerator.DomainConfigInfoDTO;
+import org.wso2.carbon.eventprocessing.executiongenerator.ExecutionGeneratorAdminService;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.util.ExecutionGeneratorConstants;
 import org.wso2.carbon.registry.core.Registry;
 import org.wso2.carbon.registry.core.Resource;
@@ -12,14 +14,15 @@ import org.wso2.carbon.registry.core.exceptions.RegistryException;
 /*
  class that access wso2 carbon registry to save, delete and get content there
  */
-public class ExecutionGenerator {
+public class ConfigInformationCollector {
 
     private Registry registry;
-
+    public static ConfigInformationCollector instance =null;
+    final Log log = LogFactory.getLog(ExecutionGeneratorAdminService.class);
     /**
      * constructor
      */
-    public ExecutionGenerator() {
+    private ConfigInformationCollector() {
 
         CarbonContext cCtx = CarbonContext.getCurrentContext();
         registry = (Registry) cCtx.getRegistry(RegistryType.SYSTEM_CONFIGURATION);
@@ -38,7 +41,7 @@ public class ExecutionGenerator {
      * @param type        template configuration type
      */
     public void saveTemplateConfig(String fileName, String fileContent, String description, String type) {
-        final Log log = LogFactory.getLog(ExecutionGeneratorAdminService.class);
+
         try {
             Resource resource = registry.newResource();
             resource.setContent(fileContent);
@@ -67,7 +70,7 @@ public class ExecutionGenerator {
             configContent = new String((byte[]) config_file.getContent());
 
         } catch (org.wso2.carbon.registry.core.exceptions.RegistryException e) {
-
+            log.error(e.getMessage(), e);
         }
         return configContent;
     }
@@ -95,7 +98,7 @@ public class ExecutionGenerator {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+           log.error("Exception at getting all template Configuration: "+e);
         }
         return domainConfigInfo;
     }
@@ -105,13 +108,19 @@ public class ExecutionGenerator {
      *
      * @param configName template configuration name
      */
-    public void deleteTemplateConfig(String configName) {
+    public void deleteTemplateConfig(String configName){
 
         try {
             registry.delete(ExecutionGeneratorConstants.TEMPLATE_CONFIG_PATH + "/" + configName + ".xml");
         } catch (Exception e) {
-            e.printStackTrace();
+           log.error("Exception at deleting template configuration: "+e);
         }
     }
 
+    public static ConfigInformationCollector getInstance(){
+        if(instance == null){
+            instance=new ConfigInformationCollector();
+        }
+        return instance;
+    }
 }

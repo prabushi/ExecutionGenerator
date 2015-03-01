@@ -21,7 +21,8 @@ public class TemplateWiringObject extends WiringObject {
      * @param type template type
      */
     public TemplateWiringObject(String name,String type) {
-        super(type);
+        super(WiringObject.Type.valueOf(type));
+        this.name=name;
     }
 
     public String getName() {
@@ -32,4 +33,5 @@ public class TemplateWiringObject extends WiringObject {
 
         this.name = name;
     }
+
 }

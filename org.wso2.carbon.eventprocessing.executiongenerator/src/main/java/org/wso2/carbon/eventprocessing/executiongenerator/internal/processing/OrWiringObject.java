@@ -10,6 +10,6 @@ public class OrWiringObject extends WiringObject {
      * @param type template type
      */
     public OrWiringObject(String type) {
-        super(type);
+        super(WiringObject.Type.valueOf(type));
     }
 }

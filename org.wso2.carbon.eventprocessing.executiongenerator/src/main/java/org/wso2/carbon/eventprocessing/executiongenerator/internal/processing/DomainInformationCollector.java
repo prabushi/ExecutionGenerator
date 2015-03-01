@@ -18,24 +18,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class DomainInformation {
-    private static final Log log = LogFactory.getLog(DomainInformation.class);
-    //list to keep track of template domain information
+public class DomainInformationCollector {
+    private static final Log log = LogFactory.getLog(DomainInformationCollector.class);
 
+    public static DomainInformationCollector instance = null;
+
+    private DomainInformationCollector() {
+
+    }
 
     /**
      * read all TemplateDomains and returns the name and its description as an array of the domain objects
      *
      * @return DomainInfoDTO object array
      */
-    public DomainInfoDTO[] getAllDomainInfo() {
+    public static DomainInfoDTO[] getAllDomainInfo() {
+        //list to keep track of template domain information
         List<DomainInfoDTO> domainInfoList;
         //get template domain file path
         String filePath = ExecutionGeneratorConstants.TEMPLATE_DOMAIN_PATH;
         File folder = new File(filePath);
         //list of domain objects
         domainInfoList = new ArrayList<>();
-        searchFiles(folder);
+        try {
+            searchFiles(folder, domainInfoList);
+        } catch (Exception e) {
+            log.error("Exception at getting all domain Information: "+e);
+        }
         //convert DomainInfoDTO object list to an array
         DomainInfoDTO[] allDomainInfo = new DomainInfoDTO[domainInfoList.size()];
         allDomainInfo = domainInfoList.toArray(allDomainInfo);
@@ -48,7 +57,7 @@ public class DomainInformation {
      *
      * @param folder-path to the cep directory where the templateDomain files are stored
      */
-    private void searchFiles(final File folder) {
+    private static void searchFiles(final File folder, List<DomainInfoDTO> domainInfoList) throws Exception {
         try {
             //traverse through the folder
             for (final File fileEntry : folder.listFiles()) {
@@ -75,7 +84,7 @@ public class DomainInformation {
                 }
             }
         } catch (FileNotFoundException | JAXBException e) {
-            log.error(e.getMessage(), e);
+            throw new Exception("Exception at searching for file: " + e);
         }
     }
 
@@ -85,7 +94,7 @@ public class DomainInformation {
      * @param domainName template domain name
      * @return content of the TemplateDomain file
      */
-    public String getSpecificDomainInfo(String domainName) {
+    public static String getSpecificDomainInfo(String domainName) {
         String fileName = "/" + domainName + ".xml";
         String fileContent = "";
         //path to the location where the TemplateDomain files are stored
@@ -96,9 +105,16 @@ public class DomainInformation {
             //convert input stream to string
             fileContent = IOUtils.toString(inputStream, "UTF-8");
         } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            log.error("IOException at getting Domain Information: " + e);
         }
 
         return fileContent;
+    }
+
+    public static DomainInformationCollector getInstance() {
+        if (instance == null) {
+            instance = new DomainInformationCollector();
+        }
+        return instance;
     }
 }

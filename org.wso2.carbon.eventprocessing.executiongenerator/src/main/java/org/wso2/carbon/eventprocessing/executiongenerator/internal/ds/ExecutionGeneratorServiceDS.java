@@ -19,13 +19,14 @@ package org.wso2.carbon.eventprocessing.executiongenerator.internal.ds;
 
 import org.osgi.service.component.ComponentContext;
 import org.wso2.carbon.event.processor.core.EventProcessorService;
+import org.wso2.carbon.eventprocessing.executiongenerator.internal.processing.ConfigInformationCollector;
 import org.wso2.carbon.registry.core.exceptions.RegistryException;
 import org.wso2.carbon.registry.core.service.RegistryService;
 
 /**
  * This class is used to get the EventProcessor service.
  *
- * @scr.component name="eventProcessorAdmin.component" immediate="true"
+ * @scr.component name="executionGenerator.component" immediate="true"
  * @scr.reference name="eventProcessorService.service"
  * interface="org.wso2.carbon.event.processor.core.EventProcessorService" cardinality="1..1"
  * policy="dynamic" bind="setEventProcessorService" unbind="unsetEventProcessorService"
@@ -36,7 +37,7 @@ import org.wso2.carbon.registry.core.service.RegistryService;
 public class ExecutionGeneratorServiceDS {
 
     protected void activate(ComponentContext context) {
-
+        ConfigInformationCollector.getInstance();
     }
 
     public void setEventProcessorService(EventProcessorService eventProcessorService) {

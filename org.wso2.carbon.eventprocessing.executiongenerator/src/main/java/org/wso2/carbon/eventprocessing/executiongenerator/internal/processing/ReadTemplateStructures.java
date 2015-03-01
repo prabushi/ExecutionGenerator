@@ -1,11 +1,10 @@
 package org.wso2.carbon.eventprocessing.executiongenerator.internal.processing;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.temperatureanalysis.ObjectFactory;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.temperatureanalysis.Template;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.temperatureanalysis.TemplateDomain;
 import org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.templateconfiguration.TemplateConfig;
+import org.wso2.carbon.eventprocessing.executiongenerator.internal.util.ExecutionGeneratorConstants;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -18,7 +17,12 @@ import java.nio.charset.StandardCharsets;
   class that read template domain structures and template configuration structures using JAXB and return each class object
  */
 public class ReadTemplateStructures {
-    private static final Log log = LogFactory.getLog(Processing.class);
+
+    public static ReadTemplateStructures instance =null;
+
+    private ReadTemplateStructures(){
+
+    }
 
     /**
      * get template configuration object when the object's xml content is given
@@ -27,6 +31,7 @@ public class ReadTemplateStructures {
      * @return template configuration object
      */
     public TemplateConfig getTemplateConfig(String fileContent) throws JAXBException {
+
 
             JAXBContext jaxbContext = JAXBContext.newInstance(org.wso2.carbon.eventprocessing.executiongenerator.internal.templatestructure.templateconfiguration.ObjectFactory.class);
 
@@ -45,10 +50,10 @@ public class ReadTemplateStructures {
      * @param fileName domain name
      * @return template domain object
      */
-    public TemplateDomain getTemplateDomain(String fileName) throws JAXBException {
+    public TemplateDomain getTemplateDomain(String fileName) throws Exception {
 
-            DomainInformation domainInformation = new DomainInformation();
-            String fileContent = domainInformation.getSpecificDomainInfo(fileName);
+            DomainInformationCollector domainInformationCollector = ExecutionGeneratorConstants.domainInformationCollector;
+            String fileContent = domainInformationCollector.getSpecificDomainInfo(fileName);
 
             JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
 
@@ -77,5 +82,12 @@ public class ReadTemplateStructures {
             }
         }
         return query;
+    }
+
+    public static ReadTemplateStructures getInstance(){
+        if(instance == null){
+            instance=new ReadTemplateStructures();
+        }
+        return instance;
     }
 }

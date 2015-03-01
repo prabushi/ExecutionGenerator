@@ -4,21 +4,21 @@ package org.wso2.carbon.eventprocessing.executiongenerator.internal.processing;
  * represent an object withing template wiring
  */
 public class WiringObject {
-
+    public enum Type{left,right}
     private String inStream;
     private String outStreamLeft;
     private String outStreamRight;
     private WiringObject left;
     private WiringObject right;
     private WiringObject parent;
-    private String type;
+    private Type type;
 
     /**
      * constructor
      *
      * @param type        template type
      */
-    public WiringObject(String type) {
+    public WiringObject(Type type) {
         super();
         this.inStream = "";
         this.outStreamLeft = "";
@@ -85,7 +85,7 @@ public class WiringObject {
      *
      * @return template type
      */
-    public String getType() {
+    public Type getType() {
         return type;
     }
 
